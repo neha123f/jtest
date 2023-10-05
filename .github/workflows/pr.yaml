@@ -1,36 +1,28 @@
-name: Count Severity on PR
+name: Comment with HTML Summary on PR
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize]
 
 jobs:
-  count_severity:
+  comment_with_html:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Run Custom Script
+      - name: Run Custom Script and Generate HTML Summary
         run: |
           chmod +x count_severity.sh
-          ./count_severity.sh  > result.json
-          cat result.json
+          ./count_severity.sh > result.json
+          echo "<html><body><table border='1'><thead><tr><th>Severity</th><th>Count</th></tr></thead><tbody>" > $GITHUB_WORKSPACE/summary.html
+          cat result.json | jq -r '.SeverityCount[] | "<tr><td>\(.severity)</td><td>\(.count)</td></tr>"' >> $GITHUB_WORKSPACE/summary.html
+          echo "</tbody></table>" >> $GITHUB_WORKSPACE/summary.html
+          echo "<p>Trafficlight: $(jq -r '.Trafficlight' result.json)</p>" >> $GITHUB_WORKSPACE/summary.html
+          echo "</body></html>" >> $GITHUB_WORKSPACE/summary.html
 
-      - name: Generate HTML Summary
-        if: always()
-        run: |
-           echo "<html><body><table border='1'><thead><tr><th>Severity</th><th>Count</th></tr></thead><tbody>" > $GITHUB_WORKSPACE/summary.html
-           cat result.json | jq -r '.SeverityCount[] | "<tr><td>\(.severity)</td><td>\(.count)</td></tr>"' >> $GITHUB_WORKSPACE/summary.html
-           echo "</tbody></table>" >> $GITHUB_WORKSPACE/summary.html
-           echo "<p>Trafficlight: $(jq -r '.Trafficlight' result.json)</p>" >> $GITHUB_WORKSPACE/summary.html
-           echo "</body></html>" >> $GITHUB_WORKSPACE/summary.html
-
-      - name: Display HTML Summary
-        run: cat $GITHUB_WORKSPACE/summary.html >> $GITHUB_STEP_SUMMARY
-
-      - name: Update Pull Request Description
+      - name: Comment with HTML Summary
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -38,10 +30,10 @@ jobs:
             const fs = require('fs');
             const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
             const { owner, repo, issue_number } = context.issue;
-            
-               await github.issues.createComment({
-              owner: "neha123f",
-              repo: "jtest",
-              issue_number: issue.number,
+
+            await github.issues.createComment({
+              owner: "neha123f" ,
+              repo: "jtest" ,
+              issue_number: context.payload.number,
               body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
             });
