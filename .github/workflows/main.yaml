@@ -1,8 +1,6 @@
 name: Count Severity
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 
@@ -15,78 +13,38 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Run Custom Script
-        id: run_custom_script
         run: |
           chmod +x count_severity.sh
-          ./count_severity.sh  > result.json
+          ./count_severity.sh result.json
           cat result.json
-
       - name: Generate HTML Summary
-        id: generate_html_summary
         if: always()
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const path = require('path');
-
-            // Read the JSON data from result.json
-            const resultData = fs.readFileSync('result.json', 'utf8');
-            const jsonData = JSON.parse(resultData);
-
-            // Generate the HTML content
-            let tableRows = '';
-            for (const item of jsonData.SeverityCount) {
-              tableRows += `<tr><td>${item.severity}</td><td>${item.count}</td></tr>`;
-            }
-
-            const htmlContent = `
-              <html>
-                <body>
-                  <table border='1'>
-                    <thead>
-                      <tr>
-                        <th>Severity</th>
-                        <th>Count</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${tableRows}
-                    </tbody>
-                  </table>
-                  <p>Trafficlight: ${jsonData.Trafficlight}</p>
-                </body>
-              </html>
-            `;
-
-            // Write the HTML content to summary.html
-            fs.writeFileSync(path.join(process.env.GITHUB_WORKSPACE, 'summary.html'), htmlContent);
-
+        run: |
+           echo "<html><body><table border='1'><thead><tr><th>Severity</th><th>Count</th></tr></thead><tbody>" > $GITHUB_WORKSPACE/summary.html
+           cat result.json | jq -r '.SeverityCount[] | "<tr><td>\(.severity)</td><td>\(.count)</td></tr>"' >> $GITHUB_WORKSPACE/summary.html
+           echo "</tbody></table>" >> $GITHUB_WORKSPACE/summary.html
+           echo "<p>Trafficlight: $(jq -r '.Trafficlight' result.json)</p>" >> $GITHUB_WORKSPACE/summary.html
+           echo "</body></html>" >> $GITHUB_WORKSPACE/summary.html
       - name: Display
-        run: cat $GITHUB_WORKSPACE/summary.html >> $GITHUB_STEP_SUMMARY
+        run:  cat $GITHUB_WORKSPACE/summary.html >> $GITHUB_STEP_SUMMARY
+      - name: Convert HTML to Markdown
+        run: |
+           cat $GITHUB_WORKSPACE/summary.html |
+           pandoc -f html -t markdown -o $GITHUB_WORKSPACE/summary.md
+        shell: bash
 
-      - name: Report Checks Status
-        if: always()
-        uses: actions/github-script@v6
+      - name: Update Pull Request Description
+        uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const { context, github } = require('@actions/github');
-            const fs = require('fs');
+             const fs = require('fs');
+             const summaryMarkdown = fs.readFileSync('./summary.md', 'utf8');
 
-            const summary = fs.readFileSync('summary.html', 'utf8');
-            const checkName = 'Workflow Results';
+             github.rest.pulls.update({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               pull_number: context.issue.number,
+               body: context.payload.pull_request.body + `\n\n${summaryMarkdown}`,
+             });
 
-            await github.checks.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              name: checkName,
-              head_sha: context.payload.pull_request.head.sha,
-              status: 'completed',
-              conclusion: 'success', // or 'failure' if applicable
-              output: {
-                title: 'Workflow Results',
-                summary: summary,
-              },
-            });
