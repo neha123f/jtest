@@ -1,7 +1,9 @@
 name: Count Severity
 
 on:
-  workflow_dispatch:
+ pull_request:
+    types: [opened, synchronize, reopened]
+ workflow_dispatch:
 
 
 jobs:
