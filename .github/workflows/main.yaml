@@ -33,14 +33,19 @@ jobs:
       - name: Update Pull Request Description
         uses: actions/github-script@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
+         github-token: ${{ secrets.GITHUB_TOKEN }}
+         script: |
+               if (context && context.repo && context.payload && context.payload.number) {
+                 const fs = require('fs');
+                 const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
 
-            github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
-            });
+                 github.rest.issues.createComment({
+                   owner: context.repo.owner,
+                   repo: context.repo.repo,
+                   issue_number: context.payload.number,
+                   body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
+                 });
+               } else {
+               console.log('Context information not available. Cannot update pull request description.');
+               }
+
