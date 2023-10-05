@@ -33,6 +33,7 @@ jobs:
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          permissions: write-all
           script: |
             const fs = require('fs');
             const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
