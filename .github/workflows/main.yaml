@@ -4,10 +4,6 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
-    inputs:
-      file_name:
-        description: 'Enter the json file'
-        required: true
 
 jobs:
   count_severity:
