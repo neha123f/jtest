@@ -1,7 +1,7 @@
 name: Update Pull Request Description
-on: workflow_dispatch
-  #pull_request:
-   # types: [opened, synchronize, reopened]
+on: 
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   update_pull_request_description:
@@ -39,7 +39,7 @@ jobs:
             const { owner, repo, number } = context.issue;
 
             try {
-              await github.issues.createComment({
+              await github.rest.issues.createComment({
                 owner: owner,
                 repo: repo,
                 issue_number: number,
