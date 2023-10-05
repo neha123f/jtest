@@ -38,9 +38,9 @@ jobs:
             const fs = require('fs');
             const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
             
-            github.rest.issues.createComment({
-              owner: github.context.repo.owner,
-              repo: github.context.repo.repo,
-              issue_number: github.context.issue.number,
+               await github.issues.createComment({
+              owner: "neha123f",
+              repo: "jtest",
+              issue_number: context.payload.number,
               body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
             });
