@@ -1,51 +1,116 @@
+
 name: Update Pull Request Description
-on: 
+
+on:
+
   pull_request:
+
     types: [opened, synchronize, reopened]
 
+ 
+
 jobs:
+
   update_pull_request_description:
+
     runs-on: ubuntu-latest
 
+ 
+
     steps:
+
       - name: Checkout code
+
         uses: actions/checkout@v2
 
+ 
+
       - name: Run Custom Script
+
         run: |
+
           chmod +x count_severity.sh
+
           ./count_severity.sh > result.json
+
           cat result.json
 
+ 
+
       - name: Generate HTML Summary
+
         if: always()
+
         run: |
+
            echo "<html><body><table border='1'><thead><tr><th>Severity</th><th>Count</th></tr></thead><tbody>" > $GITHUB_WORKSPACE/summary.html
+
            cat result.json | jq -r '.SeverityCount[] | "<tr><td>\(.severity)</td><td>\(.count)</td></tr>"' >> $GITHUB_WORKSPACE/summary.html
+
            echo "</tbody></table>" >> $GITHUB_WORKSPACE/summary.html
+
            echo "<p>Trafficlight: $(jq -r '.Trafficlight' result.json)</p>" >> $GITHUB_WORKSPACE/summary.html
+
            echo "</body></html>" >> $GITHUB_WORKSPACE/summary.html
 
+ 
+
       - name: Display HTML Summary
+
         run: cat $GITHUB_WORKSPACE/summary.html >> $GITHUB_STEP_SUMMARY
 
+ 
+
       - name: Update Pull Request Description
+
         uses: actions/github-script@v6
+
         with:
+
           github-token: ${{ secrets.GITHUB_TOKEN }}
+
           permissions: write-all
+
           script: |
+
+            const github = context.github; // Import the github object
+
             const fs = require('fs');
+
             const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
+
             const { owner, repo, number } = context.issue;
 
-            try {
-              await github.rest.issues.createComment({
-                owner: owner,
-                repo: repo,
-                issue_number: number,
-                body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
-              });
-            } catch (error) {
-              console.error(error.message);
+ 
+
+            // Wrap the script in an async function
+
+            async function updateComment() {
+
+              try {
+
+                await github.rest.issues.createComment({
+
+                  owner: owner,
+
+                  repo: repo,
+
+                  issue_number: number,
+
+                  body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
+
+                });
+
+              } catch (error) {
+
+                console.error(error.message);
+
+              }
+
             }
+
+ 
+
+            // Call the async function
+
+            updateComment()
