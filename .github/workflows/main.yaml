@@ -15,7 +15,7 @@ jobs:
       - name: Run Custom Script
         run: |
           chmod +x count_severity.sh
-          ./count_severity.sh result.json
+          ./count_severity.sh > result.json
           cat result.json
       - name: Generate HTML Summary
         if: always()
