@@ -5,6 +5,7 @@ on:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
 
+
 jobs:
   count_severity:
     runs-on: ubuntu-latest
@@ -39,18 +40,17 @@ jobs:
             const fs = require('fs');
             const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
 
-            if (github.context.eventName === 'pull_request') {
-              // When triggered by a pull request event
+            if (github.event.inputs) {
+              // Workflow triggered manually using workflow_dispatch
+              console.log('Manually triggered workflow.');
+            } else if (github.context.eventName === 'pull_request') {
+              // Workflow triggered by a pull request event
               github.rest.issues.createComment({
                 owner: github.context.repo.owner,
                 repo: github.context.repo.repo,
                 issue_number: github.context.issue.number,
                 body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
               });
-            } else if (github.context.eventName === 'workflow_dispatch') {
-              // When manually triggered using workflow_dispatch
-              // You can perform any custom logic here if needed
-              console.log('Manually triggered workflow.');
             } else {
               console.log('Unsupported event.');
             }
