@@ -1,0 +1,46 @@
+name: Count Severity on PR
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  count_severity:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run Custom Script
+        run: |
+          chmod +x count_severity.sh
+          ./count_severity.sh  > result.json
+          cat result.json
+
+      - name: Generate HTML Summary
+        if: always()
+        run: |
+           echo "<html><body><table border='1'><thead><tr><th>Severity</th><th>Count</th></tr></thead><tbody>" > $GITHUB_WORKSPACE/summary.html
+           cat result.json | jq -r '.SeverityCount[] | "<tr><td>\(.severity)</td><td>\(.count)</td></tr>"' >> $GITHUB_WORKSPACE/summary.html
+           echo "</tbody></table>" >> $GITHUB_WORKSPACE/summary.html
+           echo "<p>Trafficlight: $(jq -r '.Trafficlight' result.json)</p>" >> $GITHUB_WORKSPACE/summary.html
+           echo "</body></html>" >> $GITHUB_WORKSPACE/summary.html
+
+      - name: Display HTML Summary
+        run: cat $GITHUB_WORKSPACE/summary.html >> $GITHUB_STEP_SUMMARY
+
+      - name: Update Pull Request Description
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
+            
+            github.rest.issues.createComment({
+              owner: github.context.repo.owner,
+              repo: github.context.repo.repo,
+              issue_number: github.context.issue.number,
+              body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
+            });
