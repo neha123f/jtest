@@ -37,10 +37,11 @@ jobs:
           script: |
             const fs = require('fs');
             const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
+            const { owner, repo, issue_number } = context.issue;
             
                await github.issues.createComment({
               owner: "neha123f",
               repo: "jtest",
-              issue_number: context.payload.number,
+              issue_number: issue.number,
               body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
             });
