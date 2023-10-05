@@ -27,11 +27,11 @@ jobs:
            echo "</body></html>" >> $GITHUB_WORKSPACE/summary.html
       - name: Display
         run:  cat $GITHUB_WORKSPACE/summary.html >> $GITHUB_STEP_SUMMARY
-      - name: Convert HTML to Markdown
-        run: |
-           cat $GITHUB_WORKSPACE/summary.html |
-           pandoc -f html -t markdown -o $GITHUB_WORKSPACE/summary.md
-        shell: bash
+     # - name: Convert HTML to Markdown
+      #  run: |
+      #     cat $GITHUB_WORKSPACE/summary.html |
+        #   pandoc -f html -t markdown -o $GITHUB_WORKSPACE/summary.md
+      #  shell: bash
 
       - name: Update Pull Request Description
         uses: actions/github-script@v4
