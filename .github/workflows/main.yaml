@@ -15,8 +15,9 @@ jobs:
       - name: Run Custom Script
         run: |
           chmod +x count_severity.sh
-          ./count_severity.sh > result.json
+          ./count_severity.sh  > result.json
           cat result.json
+
       - name: Generate HTML Summary
         if: always()
         run: |
@@ -25,26 +26,21 @@ jobs:
            echo "</tbody></table>" >> $GITHUB_WORKSPACE/summary.html
            echo "<p>Trafficlight: $(jq -r '.Trafficlight' result.json)</p>" >> $GITHUB_WORKSPACE/summary.html
            echo "</body></html>" >> $GITHUB_WORKSPACE/summary.html
-      - name: Display
-        run:  cat $GITHUB_WORKSPACE/summary.html >> $GITHUB_STEP_SUMMARY
-      - name: Convert HTML to Markdown
-        run: |
-         cat $GITHUB_WORKSPACE/summary.html |
-          pandoc -f html -t markdown -o $GITHUB_WORKSPACE/summary.md
-        shell: bash
+
+      - name: Display HTML Summary
+        run: cat $GITHUB_WORKSPACE/summary.html >> $GITHUB_STEP_SUMMARY
 
       - name: Update Pull Request Description
         uses: actions/github-script@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-             const fs = require('fs');
-             const summaryMarkdown = fs.readFileSync('./summary.md', 'utf8');
+            const fs = require('fs');
+            const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
 
-             github.rest.pulls.update({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               pull_number: context.issue.number,
-               body: context.payload.pull_request.body + `\n\n${summaryMarkdown}`,
-             });
-
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
+            });
