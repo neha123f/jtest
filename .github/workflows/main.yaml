@@ -1,10 +1,13 @@
 name: Count Severity
 
 on:
- pull_request:
+  pull_request:
     types: [opened, synchronize, reopened]
- workflow_dispatch:
-
+  workflow_dispatch:
+    inputs:
+      file_name:
+        description: 'Enter the json file'
+        required: true
 
 jobs:
   count_severity:
@@ -35,19 +38,23 @@ jobs:
       - name: Update Pull Request Description
         uses: actions/github-script@v4
         with:
-         github-token: ${{ secrets.GITHUB_TOKEN }}
-         script: |
-               if (context && context.repo && context.payload && context.payload.number) {
-                 const fs = require('fs');
-                 const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
 
-                 github.rest.issues.createComment({
-                   owner: context.repo.owner,
-                   repo: context.repo.repo,
-                   issue_number: context.payload.number,
-                   body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
-                 });
-               } else {
-               console.log('Context information not available. Cannot update pull request description.');
-               }
-
+            if (github.context.eventName === 'pull_request') {
+              // When triggered by a pull request event
+              github.rest.issues.createComment({
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                issue_number: github.context.issue.number,
+                body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
+              });
+            } else if (github.context.eventName === 'workflow_dispatch') {
+              // When manually triggered using workflow_dispatch
+              // You can perform any custom logic here if needed
+              console.log('Manually triggered workflow.');
+            } else {
+              console.log('Unsupported event.');
+            }
