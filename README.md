@@ -1,2 +1,2 @@
 # jtest-1.0
-this is demo tutorial thur
+this is demo tutorial.
