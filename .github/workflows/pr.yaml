@@ -1,10 +1,8 @@
-name: Count Severity
+name: Count Severity on PR
 
 on:
-  #pull_request:
-    #types: [opened, synchronize, reopened]
-  workflow_dispatch:
-
+  pull_request:
+    types: [opened, synchronize, reopened]
 
 jobs:
   count_severity:
@@ -33,24 +31,16 @@ jobs:
         run: cat $GITHUB_WORKSPACE/summary.html >> $GITHUB_STEP_SUMMARY
 
       - name: Update Pull Request Description
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const fs = require('fs');
             const summaryHtml = fs.readFileSync('./summary.html', 'utf8');
-
-            if (github.event.inputs) {
-              // Workflow triggered manually using workflow_dispatch
-              console.log('Manually triggered workflow.');
-            } else if (github.context.eventName === 'pull_request') {
-              // Workflow triggered by a pull request event
-              github.rest.issues.createComment({
-                owner: github.context.repo.owner,
-                repo: github.context.repo.repo,
-                issue_number: github.context.issue.number,
-                body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
-              });
-            } else {
-              console.log('Unsupported event.');
-            }
+            
+               await github.issues.createComment({
+              owner: "neha123f",
+              repo: "jtest",
+              issue_number: context.payload.number,
+              body: `<!--HTML_COMMENT_START-->\n${summaryHtml}\n<!--HTML_COMMENT_END-->`,
+            });
