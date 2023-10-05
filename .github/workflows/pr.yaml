@@ -1,4 +1,5 @@
 
+
 name: Update Pull Request Description
 
 on:
@@ -69,11 +70,7 @@ jobs:
 
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-          permissions: write-all
-
           script: |
-
-            const github = context.github; // Import the github object
 
             const fs = require('fs');
 
@@ -85,7 +82,7 @@ jobs:
 
             // Wrap the script in an async function
 
-            async function updateComment() {
+            async function updateComment(github) {
 
               try {
 
@@ -111,6 +108,6 @@ jobs:
 
  
 
-            // Call the async function
+            // Call the async function and pass 'github' as a parameter
 
-            updateComment()
+            updateComment(github);
