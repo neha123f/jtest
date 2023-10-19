@@ -25,10 +25,15 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.DD_token }}
 
+    - name: Create Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: updated-html
+        path: web/index.html
+
     - name: Deploy to GitHub Pages
       id: deployment
-
       uses: actions/deploy-pages@v2
       with:
         token: ${{ secrets.DD_token }}
-        publish-dir: web/index.html
+        publish-dir: ${{ runner.workspace }}/updated-html
