@@ -31,9 +31,20 @@ jobs:
         name: updated-html
         path: web/index.html
 
+    - name: Deploy Artifact to GitHub Pages
+      uses: actions/download-artifact@v2
+      with:
+        name: updated-html
+
+    - name: Create Directory
+      run: mkdir -p public
+
+    - name: Move Artifact to Deployment Directory
+      run: mv updated-html public/index.html
+
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v2
       with:
         token: ${{ secrets.DD_token }}
-        publish-dir: ${{ runner.workspace }}/updated-html
+        publish-dir: public
