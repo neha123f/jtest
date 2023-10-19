@@ -29,5 +29,5 @@ jobs:
        id: deployment
        uses: actions/deploy-pages@v2
        with:
-        access-token: ${{ secrets.GITHUB_TOKEN }}
+        access-token: ${{ secrets.API_TOKEN }}
         publish-dir: web/index.html
