@@ -29,5 +29,5 @@ jobs:
        id: deployment
        uses: actions/deploy-pages@v2
        with:
-        access-token: ${{ secrets.API_TOKEN }}
+        access-token: ${{ secrets.DD_token }}
         publish-dir: web/index.html
