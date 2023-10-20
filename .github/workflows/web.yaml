@@ -1,14 +1,14 @@
 name: Build and Deploy
-
 on:
   workflow_dispatch
-
+permissions:
+  contents: write
+  id-token: write
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout Repository
+    - name: repo checkout
       uses: actions/checkout@v2
       with:
         ref: dev
@@ -31,20 +31,15 @@ jobs:
         name: updated-html
         path: web/index.html
 
-  deploy:
-    needs: build
+    - name: Deploy Artifact to GitHub Pages
+      uses: actions/download-artifact@v2
+      with:
+        name: updated-html
+        path: public
 
-    permissions:
-      pages: write
-      id-token: write
-
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v2
+      with:
+        token: ${{ secrets.DD_token }}
+        publish-dir: public
