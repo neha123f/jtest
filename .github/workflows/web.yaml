@@ -46,6 +46,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
+      - name: Checkout dev branch
+        run: git checkout dev
+
       - name: Download Artifact
         uses: actions/download-artifact@v2
         with:
