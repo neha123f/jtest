@@ -2,9 +2,7 @@ name: Deploy updated index.html to GitHub Pages
 
 on:
   # Runs on pushes targeting the "dev" branch
-  push:
-    branches:
-      - dev
+ workflow_dispatch
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
