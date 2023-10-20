@@ -1,47 +1,50 @@
 name: Build and Deploy
+
 on:
   workflow_dispatch
-permissions:
-  contents: write
-  id-token: write
+
 jobs:
-  build-and-deploy:
-
+  # Build job
+  build:
     runs-on: ubuntu-latest
+
     steps:
-    - name: repo checkout
-      uses: actions/checkout@v2
-      with:
-        ref: dev
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Update Build Number
-      run: |
-        LATEST_BUILD_NUM=${{ github.run_number }}
-        sed -i "s/Latest Build number:.*<\/p>/Latest Build number: $LATEST_BUILD_NUM<\/p>/g" web/index.html
-        git config --global user.email "github-actions@github.com"
-        git config --global user.name "GitHub Actions"
-        git add web/index.html
-        git commit -m "Update build number to $LATEST_BUILD_NUM"
-        git push origin dev
-      env:
-        GITHUB_TOKEN: ${{ secrets.DD_token }}
+      - name: Build
+        # Add your build steps here
+        # ...
 
-    - name: Create Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: updated-html
-        path: web/index.html
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: updated-html
+          path: web/index.html
 
-    - name: Deploy Artifact to GitHub Pages
-      uses: actions/download-artifact@v2
-      with:
-        name: updated-html
-        path: public
+  # Deploy job
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
 
+    permissions:
+      pages: write
+      id-token: write
 
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v2
-      with:
-        token: ${{ secrets.DD_token }}
-        publish-dir: public
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: updated-html
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+        with:
+          token: ${{ secrets.DD_token }}
+          publish-dir: public
